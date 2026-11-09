@@ -46,6 +46,17 @@ Initialization, capture, preprocessing, enrollment, matching, calibration and
 suspend/resume follow the original OEM host contracts. Regression commands are
 listed in the [test guide](tests/README.md).
 
+## Passkeys
+
+For fingerprint-confirmed passkeys, use
+[passkey-tpm](https://github.com/dangerousplay/passkey-tpm), a TPM-backed FIDO2/WebAuthn
+authenticator for Linux.
+
+Enroll a fingerprint through fprintd or your desktop settings, then follow
+passkey-tpm's installation and setup instructions. It uses fprintd for fingerprint
+verification and handles passkey credentials and signing separately from this
+driver. PAM configuration is not required for passkey use.
+
 ## Data and authentication
 
 OEM inputs are downloaded from pinned official sources and prepared locally;
