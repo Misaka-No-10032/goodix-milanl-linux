@@ -78,10 +78,10 @@ names.
 
 Public distribution of project scripts and recipes is separate from redistribution
 of their proprietary outputs; the scripts grant no rights to vendor content.
-Project SPDX declarations and dependency licenses remain in force. Some project
-sources do not yet have a blanket license; `LicenseRef-Unspecified` is not a
-license grant. Resolve that gap before redistribution. Full terms and attribution
-boundaries are in [LICENSE-NOTICE](../packaging/LICENSE-NOTICE).
+Project-authored sources use [GPL-2.0-only](../LICENSE) unless otherwise specified.
+Third-party components, patches and dependencies retain their respective licenses.
+Full terms and attribution boundaries are in
+[LICENSE-NOTICE](../packaging/LICENSE-NOTICE).
 No templates, PMK, OTP, pixels or host secrets belong in any package.
 
 ## Original measurement reconstruction

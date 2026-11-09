@@ -5,7 +5,7 @@ pkgrel=1
 pkgdesc='Fingerprint reader library with the default driver set and Goodix MilanL support'
 arch=('x86_64')
 url='https://fprint.freedesktop.org/'
-license=('LGPL-2.1-or-later')
+license=('LGPL-2.1-or-later' 'GPL-2.0-only')
 depends=('libgcc' 'glib2' 'glibc' 'libgudev' 'libgusb' 'openssl' 'pixman')
 makedepends=('git' 'glib2-devel' 'gobject-introspection' 'meson' 'ninja' 'python-cairo' 'python-gobject' 'systemd')
 provides=("libfprint=$pkgver" 'libfprint-2.so')
@@ -13,11 +13,13 @@ conflicts=('libfprint')
 options=('!debug')
 _commit=6f9479c3d55f847c1b3769f28ceb99227f9858cf
 source=("git+https://gitlab.freedesktop.org/libfprint/libfprint.git#commit=$_commit"
-        '0001-register-goodix_milanl-driver.patch' 'goodix_milanl.c' 'goodix_milanl_proto.h')
+        '0001-register-goodix_milanl-driver.patch' 'goodix_milanl.c' 'goodix_milanl_proto.h'
+        'LICENSE.goodix-milanl')
 sha256sums=('SKIP'
-            '1e462118944e78fdcbf5b053bb72db9d16896f6b053e15faa33b511065bdb1d7'
-            '186844bff1f15f115c9ffcb52c46a5a7fb5e75372f209ec2c59a5728897a84be'
-            '3fabd3c145d16fc6632b761f9e503001bd5d00accab3c75658a02db762d1d0f2')
+            '8da29e27caee584085d9fd96d8f8283717d4c7a01123c3140080f9cf1938a8cc'
+            '42f156d7d6e2ecc31ce104e53a472aac3d7b70f2658ab4b9ab14c2a857601837'
+            '3b82ace72ffc415eb0dd8ef0288c39663f4ad57d6a94bf27d9542efdb14afed5'
+            'aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3')
 
 prepare() {
     patch -d libfprint -p1 < 0001-register-goodix_milanl-driver.patch
@@ -40,4 +42,6 @@ check() {
 
 package() {
     DESTDIR="$pkgdir" "${MESON:-meson}" install -C build --no-rebuild
+    install -Dm644 LICENSE.goodix-milanl \
+        "$pkgdir/usr/share/licenses/$pkgname/LICENSE.goodix-milanl"
 }

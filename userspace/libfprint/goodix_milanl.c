@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * libfprint driver for the Goodix MilanL sensor (ACPI GXFP51B7).
  * Capture and matching are provided by the Goodix MilanL engine daemon.

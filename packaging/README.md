@@ -111,8 +111,10 @@ RSA signatures and reconstructed SGX measurements. Preparation produces local
 Public project scripts and recipes are separate from proprietary downloaded
 inputs and generated outputs. Keep the latter, including `goodix-milanl-oem`
 and vendor-containing source bundles, private. The Intel agreement and Goodix
-copyright notice accompany the OEM package. Rust dependency licenses accompany
-the engine; not all project sources have a blanket license.
+copyright notice accompany the OEM package. Project-authored sources use
+[GPL-2.0-only](../LICENSE) unless otherwise specified. The engine package includes
+the project license and Rust dependency licenses; third-party components and
+patches retain their respective licenses.
 [LICENSE-NOTICE](LICENSE-NOTICE) records these boundaries. Downloading or locally
 packaging vendor content does not grant redistribution rights.
 

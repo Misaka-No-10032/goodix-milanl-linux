@@ -24,6 +24,7 @@ done
 cp -- "$repo/userspace/libfprint/0001-register-goodix_milanl-driver.patch" \
     "$repo/userspace/libfprint/goodix_milanl.c" "$repo/userspace/libfprint/goodix_milanl_proto.h" "$work/libfprint/"
 cp -- "$repo/userspace/fprintd/0001-persist-matched-prints.patch" "$work/fprintd/"
+cp -- "$repo/LICENSE" "$work/libfprint/LICENSE.goodix-milanl"
 export SRCDEST="$work/sources" PKGDEST="$work/packages"
 # --holdver keeps the pinned, locally cached VCS sources offline.
 # --nodeps is intentional: the patched libfprint is staged, never host-installed.

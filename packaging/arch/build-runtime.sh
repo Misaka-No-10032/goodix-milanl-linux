@@ -19,6 +19,7 @@ crate="$repo/userspace/engine"
 mkdir -- "$work/goodix-milanl" "$work/goodix-milanl/.cargo"
 cp -R -- "$crate/Cargo.toml" "$crate/Cargo.lock" "$crate/README.md" \
     "$crate/src" "$crate/tests" "$work/goodix-milanl/"
+cp -- "$repo/LICENSE" "$work/goodix-milanl/LICENSE"
 # Dependencies must already be cached. The package then builds offline with an
 # empty CARGO_HOME; no registry cache or repository path is needed by makepkg.
 cargo vendor --offline --locked --versioned-dirs --manifest-path "$crate/Cargo.toml" \

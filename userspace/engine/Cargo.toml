@@ -4,6 +4,7 @@ version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Native MilanL fingerprint backend for libfprint"
+license = "GPL-2.0-only"
 publish = false
 
 [dependencies]

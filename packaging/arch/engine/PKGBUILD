@@ -4,7 +4,7 @@ pkgver=0.2.0
 pkgrel=1
 pkgdesc='Native Goodix MilanL fingerprint engine for libfprint'
 arch=('x86_64')
-license=('GPL-2.0-only' 'LicenseRef-Unspecified' 'MIT' 'Apache-2.0' 'BSD-3-Clause')
+license=('GPL-2.0-only' 'MIT' 'BSD-3-Clause')
 depends=('glibc' 'gcc-libs' 'kmod' 'systemd' 'fprintd-goodix-milanl'
          'isgx-legacy-dkms' 'goodix-milanl-transport-dkms' 'goodix-milanl-oem=1.1.151.18')
 makedepends=('rust')
@@ -46,6 +46,7 @@ package() {
         install -Dm644 "$path" "$pkgdir/usr/share/goodix-milanl/selinux/$path"
     done
     install -Dm644 install-selinux.sh "$pkgdir/usr/share/goodix-milanl/selinux/install.sh"
+    install -Dm644 "$srcdir/goodix-milanl/LICENSE" "$licenses/LICENSE"
     install -Dm644 LICENSE-NOTICE "$licenses/LICENSE-NOTICE"
     install -Dm644 isgx-License.txt "$licenses/isgx-License.txt"
     for path in "$srcdir/goodix-milanl/vendor/"*/LICENSE*; do

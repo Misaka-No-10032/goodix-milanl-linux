@@ -57,6 +57,13 @@ passkey-tpm's installation and setup instructions. It uses fprintd for fingerpri
 verification and handles passkey credentials and signing separately from this
 driver. PAM configuration is not required for passkey use.
 
+## License
+
+Project-authored code, scripts and documentation are licensed under
+[GPL-2.0-only](LICENSE), unless otherwise specified. Third-party components and
+patches retain their respective licenses; see the
+[license notice](packaging/LICENSE-NOTICE).
+
 ## Data and authentication
 
 OEM inputs are downloaded from pinned official sources and prepared locally;

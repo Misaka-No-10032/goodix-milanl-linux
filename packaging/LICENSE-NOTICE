@@ -2,13 +2,25 @@ These recipes fetch vendor inputs from official sources and process them locally
 The repository contains preparation code, not the vendor binaries. Source-code
 licensing and redistribution of generated vendor assets are separate matters.
 
-Project files with an explicit SPDX license retain that license. The Rust SGX
-implementation and its assembly declare GPL-2.0-only. The isgx ABI attribution
-and accompanying Intel License.txt are preserved. Other project Rust sources do
-not yet have a blanket license; LicenseRef-Unspecified records that gap, not a
-new license grant. Resolve it before distributing a project runtime package.
-The locked Rust dependencies retain their own licenses; their license texts are
-installed under goodix-milanl-engine/dependencies in the package license directory.
+Project-authored source code, scripts and documentation are licensed under the
+GNU General Public License, version 2 only (SPDX: GPL-2.0-only), unless otherwise
+specified. The repository's LICENSE contains the full license text. Existing
+SPDX declarations, third-party copyright notices and license terms are preserved.
+The Rust SGX implementation and its assembly use GPL-2.0-only; the isgx ABI
+attribution and accompanying Intel License.txt remain intact.
+
+Patches to third-party projects follow the target project's license:
+- libfprint registration patch: LGPL-2.1-or-later.
+- fprintd template-persistence patch: GPL-2.0-or-later.
+- Intel legacy isgx compatibility patch: BSD-3-Clause OR GPL-2.0-only.
+- fakeroot receive-handling patch: GPL-3.0-or-later.
+The project-authored Goodix MilanL libfprint driver and protocol header use
+GPL-2.0-only; upstream libfprint retains its original license.
+
+The locked Rust dependencies retain their own licenses. The GPL-2.0-only engine
+package uses the MIT option for dependencies dual-licensed under MIT/Apache-2.0.
+Dependency license texts are installed under goodix-milanl-engine/dependencies
+in the package license directory.
 
 The separately built goodix-milanl-oem package contains original Goodix/Huawei
 and Intel vendor content, including reconstructed enclave pages. Reconstruction

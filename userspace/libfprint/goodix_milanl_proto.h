@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /* Goodix MilanL engine <-> libfprint driver wire protocol.
  *
  * The libfprint driver is the CLIENT; the root engine daemon is the SERVER
