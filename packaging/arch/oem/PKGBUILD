@@ -1,0 +1,21 @@
+# LOCAL ONLY. Vendor content must not be uploaded or redistributed by this recipe.
+# build-runtime.sh supplies hash-verified assets and appends snapshot checksums.
+pkgname=goodix-milanl-oem
+pkgver=1.1.151.18
+pkgrel=1
+pkgdesc='Goodix MilanL 3.00.20 and Intel Windows SGX assets'
+arch=('x86_64')
+license=('LicenseRef-Proprietary')
+options=('!debug' '!strip')
+source=('oem-assets.tar' 'LICENSE-NOTICE')
+
+package() {
+    local path
+    install -dm700 "$pkgdir/usr/lib/goodix-milanl/oem"
+    for path in assets/*; do
+        install -m600 "$path" "$pkgdir/usr/lib/goodix-milanl/oem/"
+    done
+    for path in licenses/* LICENSE-NOTICE; do
+        install -Dm644 "$path" "$pkgdir/usr/share/licenses/$pkgname/${path##*/}"
+    done
+}

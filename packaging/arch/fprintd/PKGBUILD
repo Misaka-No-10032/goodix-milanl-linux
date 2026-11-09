@@ -1,0 +1,39 @@
+# Local replacement package; stage the adaptation patch beside this PKGBUILD.
+pkgname=fprintd-goodix-milanl
+pkgver=1.94.5
+pkgrel=1
+pkgdesc='Fingerprint D-Bus service with successful-match template persistence'
+arch=('x86_64')
+url='https://fprint.freedesktop.org/'
+license=('GPL-2.0-or-later')
+depends=('dbus' 'glib2' 'glibc' 'libgcc' 'libfprint-goodix-milanl' 'libfprint-2.so' 'pam' 'polkit' 'systemd' 'systemd-libs')
+makedepends=('git' 'glib2-devel' 'meson' 'ninja' 'perl' 'pkgconf')
+provides=("fprintd=$pkgver")
+conflicts=('fprintd')
+backup=('etc/fprintd.conf')
+options=('!debug')
+_commit=b54a007ccf58ac0ae074c7151b223f35cbd17306
+source=("git+https://gitlab.freedesktop.org/libfprint/fprintd.git#commit=$_commit"
+        '0001-persist-matched-prints.patch')
+sha256sums=('SKIP'
+            '49429d7538ac35f6c1da53135119d52b267b5c923ee8bf2711eb969ef77016e6')
+
+prepare() {
+    patch -d fprintd -p1 < 0001-persist-matched-prints.patch
+}
+
+build() {
+    "${MESON:-meson}" setup build fprintd \
+        --prefix=/usr --libdir=lib --libexecdir=lib \
+        --sysconfdir=/etc --localstatedir=/var \
+        --buildtype=release --wrap-mode=nodownload \
+        -Dpam=true -Dman=true -Dgtk_doc=false -Dsystemd=true \
+        -Dpam_modules_dir=/usr/lib/security \
+        -Dsystemd_system_unit_dir=/usr/lib/systemd/system \
+        -Ddbus_service_dir=/usr/share/dbus-1/system-services
+    "${MESON:-meson}" compile -C build
+}
+
+package() {
+    DESTDIR="$pkgdir" "${MESON:-meson}" install -C build --no-rebuild
+}

@@ -1,0 +1,34 @@
+# Staged with the adjacent compatibility patch and configuration by build-kernel.sh.
+pkgname=isgx-legacy-dkms
+pkgver=2.11.0
+pkgrel=2
+pkgdesc='Legacy Intel SGX driver with Linux 6.18 LTS and 7.3 compatibility'
+arch=('x86_64')
+url='https://github.com/intel/linux-sgx-driver'
+license=('BSD-3-Clause OR GPL-2.0-only')
+depends=('dkms')
+makedepends=('git')
+options=('!debug')
+_commit=eea00a3f79bd1266adc7f4072c52a7a717b9e37e
+source=("isgx::git+https://github.com/intel/linux-sgx-driver.git#commit=$_commit"
+        'isgx-linux73.patch' 'dkms.conf' 'isgx-legacy.conf')
+sha256sums=('SKIP'
+            '21af5320ac5ada93c7a52edecec57485b06220ca158512627f33488814420225'
+            'b8e5aa35908ad3990e7ad232b4106dd6952d9589cd446adb1f85b959105af7c2'
+            'f0ee7fdee7aec2dba3c7545193e097f769889623cba37c487a990363220be0f4')
+
+prepare() {
+    patch -d isgx -p1 < isgx-linux73.patch
+}
+
+package() {
+    local dest="$pkgdir/usr/src/isgx-$pkgver"
+    install -d "$dest"
+    install -m644 isgx/Makefile isgx/License.txt \
+        isgx/sgx.h isgx/sgx_arch.h isgx/sgx_asm.h isgx/sgx_user.h \
+        isgx/sgx_main.c isgx/sgx_page_cache.c isgx/sgx_ioctl.c \
+        isgx/sgx_vma.c isgx/sgx_util.c isgx/sgx_encl.c isgx/sgx_encl2.c \
+        dkms.conf "$dest/"
+    install -Dm644 isgx/License.txt "$pkgdir/usr/share/licenses/$pkgname/License.txt"
+    install -Dm644 isgx-legacy.conf "$pkgdir/usr/lib/modprobe.d/isgx-legacy.conf"
+}

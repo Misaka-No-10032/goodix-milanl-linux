@@ -1,0 +1,23 @@
+These recipes fetch vendor inputs from official sources and process them locally.
+The repository contains preparation code, not the vendor binaries. Source-code
+licensing and redistribution of generated vendor assets are separate matters.
+
+Project files with an explicit SPDX license retain that license. The Rust SGX
+implementation and its assembly declare GPL-2.0-only. The isgx ABI attribution
+and accompanying Intel License.txt are preserved. Other project Rust sources do
+not yet have a blanket license; LicenseRef-Unspecified records that gap, not a
+new license grant. Resolve it before distributing a project runtime package.
+The locked Rust dependencies retain their own licenses; their license texts are
+installed under goodix-milanl-engine/dependencies in the package license directory.
+
+The separately built goodix-milanl-oem package contains original Goodix/Huawei
+and Intel vendor content, including reconstructed enclave pages. Reconstruction
+does not change the vendor license. Keep this package local and private; do not
+upload it, extracted binaries, or a vendor-containing source bundle to a public
+repository or package service. The extracted gfspi.inf copyright notice and
+Intel Software License Agreement accompany that local package. Preserve the
+original installers and consult their terms; these recipes confer no additional
+rights and do not silently accept an installer license on the user's behalf.
+
+No fingerprint templates, PMK, OTP data, image pixels or host secrets belong in
+any of these packages.

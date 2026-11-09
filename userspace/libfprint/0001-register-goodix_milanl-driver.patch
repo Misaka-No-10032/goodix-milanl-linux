@@ -1,0 +1,31 @@
+Register the goodix_milanl driver in libfprint's build.
+
+Two one-line additions to the upstream build so the in-tree driver is
+compiled and its GType is registered. Apply with `patch -p1` from the
+root of a libfprint 1.94.100 source tree,
+then drop drivers/goodix_milanl.c and drivers/goodix_milanl_proto.h into place.
+
+The driver is added to the DEFAULT set (no optional/virtual meson flag)
+so an ordinary build ships it; it is FP_DEVICE_TYPE_VIRTUAL only at the
+libfprint API level (it is reached over a socket, not USB/SPI).
+
+--- a/meson.build
++++ b/meson.build
+@@ -147,6 +147,7 @@ drivers_info = {
+     'focaltech_moc': {},
+     'mafpmoc': {},
+     'secugen': {},
++    'goodix_milanl': {},
+
+     # SPI driver (non-optional if SPI is available)
+     'elanspi': { 'spi': true, 'helper': ['udev'], 'optional': not have_spi },
+--- a/libfprint/meson.build
++++ b/libfprint/meson.build
+@@ -139,6 +139,7 @@ driver_sources = {
+     'focaltech_moc' : files('drivers/focaltech_moc/focaltech_moc.c'),
+     'mafpmoc' : files('drivers/mafpmoc/mafpmoc.c'),
+     'secugen' : files('drivers/secugen.c'),
++    'goodix_milanl' : files('drivers/goodix_milanl.c'),
+ }
+
+ helper_sources = {

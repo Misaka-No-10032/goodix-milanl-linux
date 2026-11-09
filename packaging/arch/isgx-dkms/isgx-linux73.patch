@@ -1,0 +1,151 @@
+diff --git a/sgx.h b/sgx.h
+index 62c19da..ba74a6d 100644
+--- a/sgx.h
++++ b/sgx.h
+@@ -73,6 +73,10 @@
+ #include "sgx_arch.h"
+ #include "sgx_user.h"
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
++#define zap_vma_ptes zap_special_vma_range
++#endif
++
+ #define SGX_EINIT_SPIN_COUNT	20
+ #define SGX_EINIT_SLEEP_COUNT	50
+ #define SGX_EINIT_SLEEP_TIME	20
+diff --git a/sgx_encl.c b/sgx_encl.c
+index 04a1b9c..501da05 100644
+--- a/sgx_encl.c
++++ b/sgx_encl.c
+@@ -529,18 +529,23 @@ static struct sgx_encl *sgx_encl_alloc(struct sgx_secs *secs)
+ 	struct sgx_encl *encl;
+ 	struct file *backing;
+ 	struct file *pcmd;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 0, 0)
++	vma_flags_t shmem_flags = legacy_to_vma_flags(VM_NORESERVE);
++#else
++	unsigned long shmem_flags = VM_NORESERVE;
++#endif
+ 
+ 	ssaframesize = sgx_calc_ssaframesize(secs->miscselect, secs->xfrm);
+ 	if (sgx_validate_secs(secs, ssaframesize))
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	backing = shmem_file_setup("[dev/sgx]", secs->size + PAGE_SIZE,
+-				   VM_NORESERVE);
++				   shmem_flags);
+ 	if (IS_ERR(backing))
+ 		return (void *)backing;
+ 
+ 	pcmd = shmem_file_setup("[dev/sgx]", (secs->size + PAGE_SIZE) >> 5,
+-				VM_NORESERVE);
++				shmem_flags);
+ 	if (IS_ERR(pcmd)) {
+ 		fput(backing);
+ 		return (void *)pcmd;
+diff --git a/sgx_main.c b/sgx_main.c
+index ca52821..f4153af 100644
+--- a/sgx_main.c
++++ b/sgx_main.c
+@@ -59,6 +59,8 @@
+  */
+ 
+ #include "asm/msr-index.h"
++#include <asm/msr.h>
++#include <linux/sched/mm.h>
+ #include "sgx.h"
+ #include <linux/acpi.h>
+ #include <linux/file.h>
+@@ -109,8 +111,8 @@ bool sgx_has_sgx2;
+ static int sgx_mmap(struct file *file, struct vm_area_struct *vma)
+ {
+ 	vma->vm_ops = &sgx_vm_ops;
+-	vma->vm_flags |= VM_PFNMAP | VM_DONTEXPAND | VM_DONTDUMP | VM_IO |
+-			 VM_DONTCOPY;
++	vm_flags_set(vma, VM_PFNMAP | VM_DONTEXPAND | VM_DONTDUMP | VM_IO |
++			 VM_DONTCOPY);
+ 
+ 	return 0;
+ }
+@@ -141,8 +143,12 @@ static unsigned long sgx_get_unmapped_area(struct file *file,
+ 		return -EINVAL;
+ #endif
+ 
+-	addr = current->mm->get_unmapped_area(file, addr, 2 * len, pgoff,
+-					      flags);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 19, 0)
++	addr = mm_get_unmapped_area(file, addr, 2 * len, pgoff, flags);
++#else
++	addr = mm_get_unmapped_area(current->mm, file, addr, 2 * len, pgoff,
++				    flags);
++#endif
+ 	if (IS_ERR_VALUE(addr))
+ 		return addr;
+ 
+@@ -186,10 +192,10 @@ static int sgx_pm_suspend(struct device *dev)
+ 
+ static void sgx_reset_pubkey_hash(void *failed)
+ {
+-	if (wrmsrl_safe(MSR_IA32_SGXLEPUBKEYHASH0, 0xa6053e051270b7acULL) ||
+-		wrmsrl_safe(MSR_IA32_SGXLEPUBKEYHASH1, 0x6cfbe8ba8b3b413dULL) ||
+-		wrmsrl_safe(MSR_IA32_SGXLEPUBKEYHASH2, 0xc4916d99f2b3735dULL) ||
+-		wrmsrl_safe(MSR_IA32_SGXLEPUBKEYHASH3, 0xd4f8c05909f9bb3bULL))
++	if (wrmsrq_safe(MSR_IA32_SGXLEPUBKEYHASH0, 0xa6053e051270b7acULL) ||
++		wrmsrq_safe(MSR_IA32_SGXLEPUBKEYHASH1, 0x6cfbe8ba8b3b413dULL) ||
++		wrmsrq_safe(MSR_IA32_SGXLEPUBKEYHASH2, 0xc4916d99f2b3735dULL) ||
++		wrmsrq_safe(MSR_IA32_SGXLEPUBKEYHASH3, 0xd4f8c05909f9bb3bULL))
+ 		*(int *)failed = -EIO;
+ }
+ 
+@@ -319,7 +325,7 @@ static int sgx_drv_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
+ 
+-	rdmsrl(MSR_IA32_FEAT_CTL, fc);
++	rdmsrq(MSR_IA32_FEAT_CTL, fc);
+ 
+ 	if (!(fc & FEAT_CTL_LOCKED)) {
+ 		pr_err("intel_sgx: the feature control MSR is not locked\n");
+@@ -348,13 +354,13 @@ static int sgx_drv_probe(struct platform_device *pdev)
+ 	return sgx_dev_init(&pdev->dev);
+ }
+ 
+-static int sgx_drv_remove(struct platform_device *pdev)
++static void sgx_drv_remove(struct platform_device *pdev)
+ {
+ 	int i;
+ 
+ 	if (!atomic_cmpxchg(&sgx_init_flag, 1, 0)) {
+ 		pr_warn("intel_sgx: second release call skipped\n");
+-		return 0;
++		return;
+ 	}
+ 
+ 	misc_deregister(&sgx_dev);
+@@ -365,8 +371,6 @@ static int sgx_drv_remove(struct platform_device *pdev)
+ 		iounmap((void *)sgx_epc_banks[i].va);
+ #endif
+ 	sgx_page_cache_teardown();
+-
+-	return 0;
+ }
+ 
+ #ifdef CONFIG_ACPI
+@@ -388,7 +392,7 @@ static struct platform_driver sgx_drv = {
+ };
+ 
+ static struct platform_device *pdev;
+-int init_sgx_module(void)
++static int __init init_sgx_module(void)
+ {
+ 	platform_driver_register(&sgx_drv);
+ 	pdev = platform_device_register_simple("intel_sgx", 0, NULL, 0);
+@@ -397,7 +401,7 @@ int init_sgx_module(void)
+ 	return 0;
+ }
+ 
+-void cleanup_sgx_module(void)
++static void __exit cleanup_sgx_module(void)
+ {
+ 	dev_set_uevent_suppress(&pdev->dev, true);
+ 	platform_device_unregister(pdev);

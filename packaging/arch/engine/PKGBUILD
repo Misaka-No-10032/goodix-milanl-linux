@@ -1,0 +1,55 @@
+# Staged by build-runtime.sh; checksums are appended for the local source snapshot.
+pkgname=goodix-milanl-engine
+pkgver=0.2.0
+pkgrel=1
+pkgdesc='Native Goodix MilanL fingerprint engine for libfprint'
+arch=('x86_64')
+license=('GPL-2.0-only' 'LicenseRef-Unspecified' 'MIT' 'Apache-2.0' 'BSD-3-Clause')
+depends=('glibc' 'gcc-libs' 'kmod' 'systemd' 'fprintd-goodix-milanl'
+         'isgx-legacy-dkms' 'goodix-milanl-transport-dkms' 'goodix-milanl-oem=1.1.151.18')
+makedepends=('rust')
+optdepends=('mokutil: enroll and check the DKMS module-signing certificate'
+            'openssl: generate and inspect the DKMS module-signing certificate'
+            'selinux-refpolicy-arch: SELinux policy and build headers'
+            'checkpolicy: compile the optional SELinux module'
+            'semodule-utils: package the optional SELinux module'
+            'make: build the optional SELinux module'
+            'm4: expand reference-policy interfaces'
+            'gawk: build the optional SELinux module')
+options=('!debug')
+source=('runtime.tar' 'isgx-License.txt' 'goodix-milanl-engine.service'
+        '50-goodix-milanl.conf' 'LICENSE-NOTICE' 'secure-boot.sh'
+        'goodix_milanl.te' 'goodix_milanl.fc' 'install-selinux.sh')
+
+build() {
+    cd "$srcdir/goodix-milanl"
+    export CARGO_HOME="$srcdir/cargo-home"
+    cargo build --frozen --release --target-dir "$srcdir/target"
+}
+
+check() {
+    cd "$srcdir/goodix-milanl"
+    export CARGO_HOME="$srcdir/cargo-home"
+    cargo test --frozen --release --target-dir "$srcdir/target"
+}
+
+package() {
+    local licenses="$pkgdir/usr/share/licenses/$pkgname" path
+    install -Dm755 "$srcdir/target/release/goodix-milanl-engine" \
+        "$pkgdir/usr/bin/goodix-milanl-engine"
+    install -Dm644 goodix-milanl-engine.service \
+        "$pkgdir/usr/lib/systemd/system/goodix-milanl-engine.service"
+    install -Dm644 50-goodix-milanl.conf \
+        "$pkgdir/usr/lib/systemd/system/fprintd.service.d/50-goodix-milanl.conf"
+    install -Dm755 secure-boot.sh "$pkgdir/usr/bin/goodix-milanl-secure-boot"
+    for path in goodix_milanl.te goodix_milanl.fc; do
+        install -Dm644 "$path" "$pkgdir/usr/share/goodix-milanl/selinux/$path"
+    done
+    install -Dm644 install-selinux.sh "$pkgdir/usr/share/goodix-milanl/selinux/install.sh"
+    install -Dm644 LICENSE-NOTICE "$licenses/LICENSE-NOTICE"
+    install -Dm644 isgx-License.txt "$licenses/isgx-License.txt"
+    for path in "$srcdir/goodix-milanl/vendor/"*/LICENSE*; do
+        install -Dm644 "$path" \
+            "$licenses/dependencies/${path#"$srcdir/goodix-milanl/vendor/"}"
+    done
+}

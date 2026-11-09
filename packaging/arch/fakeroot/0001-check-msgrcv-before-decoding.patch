@@ -1,0 +1,27 @@
+Subject: [PATCH] sysv: check msgrcv errors before decoding the reply
+
+msgrcv leaves the receive buffer untouched when it returns -1. In particular,
+a signal may interrupt a receive with EINTR before any reply has arrived.
+Scanning that buffer for a message magic produces a spurious "payload not
+recognized" diagnostic. Retry EINTR without decoding, and send other receive
+errors to the existing error-reporting path. Keep the request's semaphore and
+serial number across an interrupted receive.
+
+Applies to fakeroot 2.1.4 (GPL-3.0-or-later).
+
+--- a/communicate.c
++++ b/communicate.c
+@@ -572,7 +572,12 @@ void send_get_fakem(struct fake_msg *buf)
+       l=msgrcv(msg_get,
+                &fm,
+                sizeof(fm)-sizeof(fm.mtype),0,0);
+-
++      if (l == -1) {
++        if (errno == EINTR)
++          continue;
++        break;
++      }
++
+       ptr = (uint8_t *)&fm;
+       for (k=0; k<16; k++) {
+         magic_candidate = *(uint32_t*)&ptr[k];

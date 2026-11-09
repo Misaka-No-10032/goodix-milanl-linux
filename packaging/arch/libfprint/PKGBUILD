@@ -1,0 +1,43 @@
+# Local replacement package; stage the named project files beside this PKGBUILD.
+pkgname=libfprint-goodix-milanl
+pkgver=1.94.100
+pkgrel=1
+pkgdesc='Fingerprint reader library with the default driver set and Goodix MilanL support'
+arch=('x86_64')
+url='https://fprint.freedesktop.org/'
+license=('LGPL-2.1-or-later')
+depends=('libgcc' 'glib2' 'glibc' 'libgudev' 'libgusb' 'openssl' 'pixman')
+makedepends=('git' 'glib2-devel' 'gobject-introspection' 'meson' 'ninja' 'python-cairo' 'python-gobject' 'systemd')
+provides=("libfprint=$pkgver" 'libfprint-2.so')
+conflicts=('libfprint')
+options=('!debug')
+_commit=6f9479c3d55f847c1b3769f28ceb99227f9858cf
+source=("git+https://gitlab.freedesktop.org/libfprint/libfprint.git#commit=$_commit"
+        '0001-register-goodix_milanl-driver.patch' 'goodix_milanl.c' 'goodix_milanl_proto.h')
+sha256sums=('SKIP'
+            '1e462118944e78fdcbf5b053bb72db9d16896f6b053e15faa33b511065bdb1d7'
+            '186844bff1f15f115c9ffcb52c46a5a7fb5e75372f209ec2c59a5728897a84be'
+            '3fabd3c145d16fc6632b761f9e503001bd5d00accab3c75658a02db762d1d0f2')
+
+prepare() {
+    patch -d libfprint -p1 < 0001-register-goodix_milanl-driver.patch
+    cp goodix_milanl.c goodix_milanl_proto.h libfprint/libfprint/drivers/
+}
+
+build() {
+    "${MESON:-meson}" setup build libfprint \
+        --prefix=/usr --libdir=lib --libexecdir=lib \
+        --sysconfdir=/etc --localstatedir=/var \
+        --buildtype=release --wrap-mode=nodownload \
+        -Ddrivers=default -Dintrospection=true -Ddoc=false \
+        -Dgtk-examples=false -Dinstalled-tests=false
+    "${MESON:-meson}" compile -C build
+}
+
+check() {
+    "${MESON:-meson}" test -C build --print-errorlogs
+}
+
+package() {
+    DESTDIR="$pkgdir" "${MESON:-meson}" install -C build --no-rebuild
+}

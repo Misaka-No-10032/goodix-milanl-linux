@@ -1,0 +1,19 @@
+[Unit]
+Description=Goodix MilanL fingerprint engine
+StopWhenUnneeded=yes
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=root
+UMask=0077
+RuntimeDirectory=goodix-milanl
+RuntimeDirectoryMode=0700
+StateDirectory=goodix-milanl
+StateDirectoryMode=0700
+ExecStart=/usr/bin/goodix-milanl-engine --socket /run/goodix-milanl/engine.sock --assets /usr/lib/goodix-milanl/oem
+LimitCORE=0
+NoNewPrivileges=yes
+Restart=on-failure
+# No MemoryDenyWriteExecute: the SGX/PE loader needs executable mappings.
+# Started by fprintd's dependency; no boot-time enablement is needed.

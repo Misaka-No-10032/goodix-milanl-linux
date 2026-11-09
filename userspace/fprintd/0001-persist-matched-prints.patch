@@ -1,0 +1,29 @@
+diff --git a/src/device.c b/src/device.c
+index 4de4a10..89514c7 100644
+--- a/src/device.c
++++ b/src/device.c
+@@ -1552,6 +1552,24 @@ match_cb (FpDevice *device,
+   cancelled = g_cancellable_is_cancelled (priv->current_cancellable);
+   matched = match != NULL && cancelled == FALSE;
+ 
++  /* Drivers may adapt the enrolled print in-place. Persist it before
++   * reporting authentication success. */
++  if (matched && error == NULL)
++    {
++      int r = store.print_data_save (match);
++
++      if (r != 0)
++        {
++          g_autoptr(GError) save_error = NULL;
++
++          save_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
++                                   "Error saving matched fingerprint: %d", r);
++          g_warning ("%s", save_error->message);
++          report_verify_status (rdev, FALSE, save_error);
++          return;
++        }
++    }
++
+   report_verify_status (rdev, matched, error);
+ }
+ 

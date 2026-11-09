@@ -1,0 +1,72 @@
+policy_module(goodix_milanl, 1.0.0)
+
+gen_require(`
+    type init_t, kernel_t, kmod_t, fprintd_t, device_t;
+')
+
+type goodix_milanl_engine_t;
+type goodix_milanl_engine_exec_t;
+init_daemon_domain(goodix_milanl_engine_t, goodix_milanl_engine_exec_t)
+
+type goodix_milanl_runtime_t;
+files_runtime_file(goodix_milanl_runtime_t)
+
+type goodix_milanl_oem_t;
+files_type(goodix_milanl_oem_t)
+
+type goodix_milanl_state_t;
+files_type(goodix_milanl_state_t)
+
+type goodix_milanl_raw_device_t;
+dev_node(goodix_milanl_raw_device_t)
+
+type goodix_milanl_isgx_device_t;
+dev_node(goodix_milanl_isgx_device_t)
+
+# Preserve the service's NoNewPrivileges=yes across both exec transitions.
+allow init_t goodix_milanl_engine_t:process2 nnp_transition;
+modutils_domtrans(goodix_milanl_engine_t)
+allow goodix_milanl_engine_t kmod_t:process2 nnp_transition;
+allow goodix_milanl_engine_t self:process setrlimit;
+allow goodix_milanl_engine_t self:fifo_file rw_fifo_file_perms;
+
+# Label devtmpfs nodes at creation, before udev processes the module event.
+dev_filetrans(kernel_t, goodix_milanl_raw_device_t, chr_file, "goodix-milanl-raw")
+dev_filetrans(kernel_t, goodix_milanl_isgx_device_t, chr_file, "isgx")
+allow goodix_milanl_engine_t device_t:dir search;
+allow goodix_milanl_engine_t self:capability sys_rawio;
+allow goodix_milanl_engine_t goodix_milanl_raw_device_t:chr_file { getattr open read write ioctl };
+allowxperm goodix_milanl_engine_t goodix_milanl_raw_device_t:chr_file ioctl 0x4d02;
+
+# loader.rs maps /dev/isgx MAP_SHARED RWX, not anonymous executable memory.
+allow goodix_milanl_engine_t goodix_milanl_isgx_device_t:chr_file { getattr open read write ioctl map execute };
+allowxperm goodix_milanl_engine_t goodix_milanl_isgx_device_t:chr_file ioctl { 0xa400 0xa401 0xa402 };
+files_search_usr(goodix_milanl_engine_t)
+read_files_pattern(goodix_milanl_engine_t, goodix_milanl_oem_t, goodix_milanl_oem_t)
+libs_use_ld_so(goodix_milanl_engine_t)
+libs_use_shared_libs(goodix_milanl_engine_t)
+
+# Module presence/parameters and suspend_stats; never write sysfs.
+dev_read_sysfs(goodix_milanl_engine_t)
+
+# OEM runtime state is private to the engine, separate from fprintd templates.
+files_var_lib_filetrans(init_t, goodix_milanl_state_t, dir, "goodix-milanl")
+files_var_lib_filetrans(goodix_milanl_engine_t, goodix_milanl_state_t, dir, "goodix-milanl")
+files_search_var_lib(goodix_milanl_engine_t)
+manage_dirs_pattern(goodix_milanl_engine_t, goodix_milanl_state_t, goodix_milanl_state_t)
+manage_files_pattern(goodix_milanl_engine_t, goodix_milanl_state_t, goodix_milanl_state_t)
+
+# systemd owns the runtime directory; the engine owns only its socket.
+files_runtime_filetrans(init_t, goodix_milanl_runtime_t, dir, "goodix-milanl")
+files_search_runtime(goodix_milanl_engine_t)
+manage_sock_files_pattern(goodix_milanl_engine_t, goodix_milanl_runtime_t, goodix_milanl_runtime_t)
+allow goodix_milanl_engine_t self:unix_stream_socket create_stream_socket_perms;
+allow goodix_milanl_engine_t self:unix_dgram_socket create_socket_perms;
+init_dgram_send(goodix_milanl_engine_t)
+init_use_fds(goodix_milanl_engine_t)
+init_rw_inherited_stream_socket(goodix_milanl_engine_t)
+
+# fprintd remains a socket client, without device or executable-map access.
+allow fprintd_t self:unix_stream_socket create_socket_perms;
+files_search_runtime(fprintd_t)
+stream_connect_pattern(fprintd_t, goodix_milanl_runtime_t, goodix_milanl_runtime_t, goodix_milanl_engine_t)

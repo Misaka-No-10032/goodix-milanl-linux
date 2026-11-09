@@ -1,0 +1,22 @@
+# Staged with the transport sources and configuration by build-kernel.sh.
+pkgname=goodix-milanl-transport-dkms
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Goodix MilanL GXFP51B7 ACPI mailbox transport kernel module'
+arch=('x86_64')
+license=('GPL-2.0-only')
+depends=('dkms')
+options=('!debug')
+source=('Makefile' 'goodix_milanl_transport.c' 'goodix_milanl_uapi.h' 'dkms.conf' 'goodix-milanl-transport.conf')
+sha256sums=('5006a1b81980391bf3070d094118756a1c85c1f0413c09818d76f44d48dfe767'
+            'fde27ac554931c6cab4afed6569e89a661963e6e0679dcc77fef4c1e8614d5f0'
+            '123503259b0fbafaf8e01c2367cc07cf60795d9ce599b081eab5bd37c26ba082'
+            '1e330a5931107daa06bdfade6a1f536b48e0996c95bfc8f2672f025d50a07342'
+            '47d372eef6a5ae96b0f266df752119f3e31b5ca290f141eb8b32b3d7b6f845d1')
+
+package() {
+    local dest="$pkgdir/usr/src/goodix_milanl_transport-$pkgver"
+    install -d "$dest"
+    install -m644 Makefile goodix_milanl_transport.c goodix_milanl_uapi.h dkms.conf "$dest/"
+    install -Dm644 goodix-milanl-transport.conf "$pkgdir/usr/lib/modprobe.d/goodix-milanl-transport.conf"
+}
